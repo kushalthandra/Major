@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-cyan-50 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white shadow-lg rounded-2xl w-full max-w-4xl mx-4 md:mx-8 lg:mx-16">
+    <!-- Header -->
+    <div class="bg-cyan-500 text-white text-center py-4 rounded-t-2xl">
+      <h1 class="text-2xl md:text-3xl font-bold">Chatbot</h1>
+    </div>
+
+    <!-- Chat container -->
+    <div class="p-4 h-[60vh] sm:h-[70vh] lg:h-[75vh] overflow-y-auto" id="chat-container">
+      <div class="mb-4">
+        <div class="bg-cyan-100 text-cyan-800 rounded-lg p-3 max-w-[75%] sm:max-w-[60%]">
+          <p>Hello! How can I assist you today?</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input and Send button -->
+    <div class="flex items-center border-t border-gray-200 p-4">
+      <input 
+        type="text" 
+        id="message-input" 
+        placeholder="Type a message..." 
+        class="w-full p-2 border rounded-lg focus:outline-cyan-500"
+        onkeydown="handleKeyPress(event)"
+      />
+      <button 
+        onclick="sendMessage()"
+        class="bg-cyan-500 text-white px-4 py-2 ml-2 rounded-lg hover:bg-cyan-600 transition"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:8080/get";  // Backend API URL
+
+    // Predefined local responses
+    const localResponses = {
+      "hello": "Hi there! How can I help you?",
+      "how are you": "I'm just a bot, but I'm doing great!",
+      "bye": "Goodbye! Have a nice day!"
+    };
+
+    // Function to get local response or call the backend
+    async function sendMessage() {
+      const input = document.getElementById('message-input');
+      const chatContainer = document.getElementById('chat-container');
+
+      const messageText = input.value.trim().toLowerCase();
+      if (messageText === '') return;
+
+      // Display user message
+      displayMessage(messageText, "user");
+
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Check if the message is handled locally
+      if (localResponses[messageText]) {
+        displayMessage(localResponses[messageText], "bot");
+      } else {
+        // Fetch from backend if no local response
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ msg: messageText })
+          });
+
+          const data = await response.json();
+          displayMessage(data.answer, "bot");
+
+        } catch (error) {
+          console.error("Error:", error);
+          displayMessage("Failed to connect to server!", "bot");
+        }
+      }
+    }
+
+    // Function to display messages in the chat
+    function displayMessage(text, sender) {
+      const chatContainer = document.getElementById('chat-container');
+      const message = document.createElement('div');
+      message.classList.add('flex', 'mb-4');
+
+      if (sender === "user") {
+        message.classList.add('justify-end');
+        message.innerHTML = `
+          <div class="bg-cyan-500 text-white rounded-lg p-3 max-w-[75%] sm:max-w-[60%]">
+            <p>${text}</p>
+          </div>
+        `;
+      } else {
+        message.classList.add('justify-start');
+        message.innerHTML = `
+          <div class="bg-cyan-100 text-cyan-800 rounded-lg p-3 max-w-[75%] sm:max-w-[60%]">
+            <p>${text}</p>
+          </div>
+        `;
+      }
+
+      chatContainer.appendChild(message);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Handle "Enter" key press
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+  </script>
+
+</body>
+</html>
