@@ -3,7 +3,7 @@ langchain
 flask
 pypdf
 python-dotenv
-pinecone[grpc]
+pinecone[grpc]  # Keep the main Pinecone package
 langchain-pinecone
 langchain_community
 mistralai
